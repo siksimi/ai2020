@@ -113,11 +113,11 @@ if __name__ == '__main__':
     args.add_argument("--num_classes", type=int, default=2)
     args.add_argument("--lr", type=float, default=0.0001)
     args.add_argument("--cuda", type=bool, default=True)
-    args.add_argument("--num_epochs", type=int, default=4500)
+    args.add_argument("--num_epochs", type=int, default=10)
     args.add_argument("--print_iter", type=int, default=10)
-    args.add_argument("--model_name", type=str, default="model.pth") 
+    args.add_argument("--model_name", type=str, default="1.pth") 
     args.add_argument("--prediction_file", type=str, default="prediction.txt")
-    args.add_argument("--batch", type=int, default=25)
+    args.add_argument("--batch", type=int, default=4)
     args.add_argument("--mode", type=str, default="train")
 
     config = args.parse_args()
@@ -190,7 +190,7 @@ if __name__ == '__main__':
             scheduler.step()
 
             # save model 
-            if epoch % 500 == 0 :
+            if epoch % 2 == 0 :
                 save_model(str(epoch + 1), model, optimizer, scheduler)
         
             # validate
