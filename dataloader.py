@@ -5,7 +5,7 @@ import os
 from PIL import Image
 # import pandas as pd
 
-def get_transform(resize=112, method=Image.BILINEAR):
+def get_transform(resize=224, method=Image.BILINEAR):
     transform_list = []
     if resize > 0:
         size = [resize, resize]

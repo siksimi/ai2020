@@ -34,15 +34,14 @@ try:
     from nipa import nipa_data
     DATASET_PATH = nipa_data.get_data_root('COVID')
 except:
-    DATASET_PATH = os.path.join('./data')
+    DATASET_PATH = os.path.join('/datasets/objstrgzip/10_classification_COVID')
 
 
 def _infer(model, cuda, data_loader):
     res_fc = None
     res_id = None
     for index, (image_name, image, _) in enumerate(data_loader):
-        if cuda :
-            image = image.cuda()
+
         fc = model(image)
         fc = fc.detach().cpu().numpy()
 
@@ -118,7 +117,7 @@ if __name__ == '__main__':
     args.add_argument("--print_iter", type=int, default=10)
     args.add_argument("--model_name", type=str, default="model.pth") 
     args.add_argument("--prediction_file", type=str, default="prediction.txt")
-    args.add_argument("--batch", type=int, default=4)
+    args.add_argument("--batch", type=int, default=25)
     args.add_argument("--mode", type=str, default="train")
 
     config = args.parse_args()
@@ -139,14 +138,9 @@ if __name__ == '__main__':
     if mode == 'test':
         load_model(model_name, model)
 
-    if cuda:
-        model = model.cuda()
-
     if mode == 'train':
         # define loss function
         loss_fn = nn.CrossEntropyLoss()
-        if cuda:
-            loss_fn = loss_fn.cuda()
 
         # set optimizer
         optimizer = Adam(
@@ -175,9 +169,6 @@ if __name__ == '__main__':
             for iter_, data in enumerate(train_dataloader):
                 # fetch train data
                 _, image, is_label = data 
-                if cuda:
-                    image = image.cuda()
-                    is_label = is_label.cuda() 
 
                 # update weight
                 pred = model(image)

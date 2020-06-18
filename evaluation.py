@@ -1,6 +1,6 @@
 import argparse
-import numpy as np
-from openpyxl import load_workbook
+# import numpy as np
+# from openpyxl import load_workbook
 
 #Metric
 def evaluate(prediction_labels, gt_labels):
