@@ -12,7 +12,7 @@ import argparse
 
 from dataloader import data_loader
 from evaluation import evaluation_metrics
-from model import Net
+from model_1 import Net
 
 '''
 !!!!!!!!!!!!!!!!!!!!! 필독!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -41,7 +41,8 @@ def _infer(model, cuda, data_loader):
     res_fc = None
     res_id = None
     for index, (image_name, image, _) in enumerate(data_loader):
-
+        if cuda :
+            image = image.cuda()
         fc = model(image)
         fc = fc.detach().cpu().numpy()
 
@@ -93,7 +94,7 @@ def save_model(model_name, model, optimizer, scheduler):
         'optimizer': optimizer.state_dict(),
         'scheduler': scheduler.state_dict()
     }
-    torch.save(state, os.path.join(model_name + '.pth'))
+    torch.save(state, os.path.join('./res/B/' + model_name + '.pth'))
     print('model saved')
 
 
@@ -113,11 +114,11 @@ if __name__ == '__main__':
     args.add_argument("--num_classes", type=int, default=2)
     args.add_argument("--lr", type=float, default=0.0001)
     args.add_argument("--cuda", type=bool, default=True)
-    args.add_argument("--num_epochs", type=int, default=10)
-    args.add_argument("--print_iter", type=int, default=10)
-    args.add_argument("--model_name", type=str, default="1.pth") 
-    args.add_argument("--prediction_file", type=str, default="prediction.txt")
-    args.add_argument("--batch", type=int, default=4)
+    args.add_argument("--num_epochs", type=int, default=1000)
+    args.add_argument("--print_iter", type=int, default=20)
+    args.add_argument("--model_name", type=str, default="./res/c47.pth") 
+    args.add_argument("--prediction_file", type=str, default="./res/prediction_c47.txt")
+    args.add_argument("--batch", type=int, default=32*8)
     args.add_argument("--mode", type=str, default="train")
 
     config = args.parse_args()
@@ -138,9 +139,14 @@ if __name__ == '__main__':
     if mode == 'test':
         load_model(model_name, model)
 
+    if cuda:
+        model = model.cuda()
+
     if mode == 'train':
         # define loss function
         loss_fn = nn.CrossEntropyLoss()
+        if cuda:
+            loss_fn = loss_fn.cuda()
 
         # set optimizer
         optimizer = Adam(
@@ -169,6 +175,9 @@ if __name__ == '__main__':
             for iter_, data in enumerate(train_dataloader):
                 # fetch train data
                 _, image, is_label = data 
+                if cuda:
+                    image = image.cuda()
+                    is_label = is_label.cuda() 
 
                 # update weight
                 pred = model(image)
@@ -190,7 +199,7 @@ if __name__ == '__main__':
             scheduler.step()
 
             # save model 
-            if epoch % 2 == 0 :
+            if epoch % 20 == 1 :
                 save_model(str(epoch + 1), model, optimizer, scheduler)
         
             # validate

@@ -5,23 +5,30 @@ import os
 from PIL import Image
 # import pandas as pd
 
-def get_transform(resize=224, method=Image.BILINEAR):
+def get_transform(phase, resize=0, method=Image.BILINEAR):
     transform_list = []
     if resize > 0:
         size = [resize, resize]
         transform_list.append(transforms.Resize(size, method))
-
+    # transform_list.append(transforms.ToPILImage())    
+    transform_list.append(transforms.Grayscale(num_output_channels=1))
+    if phase == 'train' :
+        transform_list.append(transforms.RandomHorizontalFlip())
+        #transform_list.append(transforms.RandomVerticalFlip())
+        transform_list.append(transforms.ColorJitter(brightness=0.5, contrast=0.5, saturation=0, hue=0))
+        transform_list.append(transforms.RandomAffine(10, translate=None, scale=None, shear=None, resample=False, fillcolor=0))
+        transform_list.append(transforms.RandomResizedCrop(384, scale=(0.8, 1.0), ratio=(0.75, 1.3333333333333333), ))
+        #transform_list.append(transforms.RandomCrop(346, padding=None, pad_if_needed=False, fill=0, padding_mode='constant'))
+        transform_list.append(transforms.RandomRotation(10, resample=False, expand=False, center=None, fill=None))
     transform_list.append(transforms.ToTensor())
-    transform_list.append(transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
+    transform_list.append(transforms.Normalize((0.485,), (0.229,)))
     return transforms.Compose(transform_list)
-
 
 class CustomDataset(data.Dataset):
     def __init__(self, root, phase='train'):
         self.root = root
         self.phase = phase
         self.labels = {}
-        
 
         self.label_path = os.path.join(root, self.phase, self.phase+'_label_COVID.txt')
         with open(self.label_path, 'r') as f:
@@ -44,7 +51,7 @@ class CustomDataset(data.Dataset):
             is_label = self.labels['label'][index]
             is_label = torch.tensor(int(is_label))
 
-        transform = get_transform()
+        transform = get_transform(self.phase)
         image = Image.open(image_path).convert('RGB')
         image = transform(image)
 
@@ -61,8 +68,7 @@ class CustomDataset(data.Dataset):
     def get_label_file(self):
         return self.label_path
 
-
-def data_loader(root, phase='train', batch_size=16):
+def data_loader(root, phase='train', batch_size = 16):
     if phase == 'train':
         shuffle = True
     else:
